@@ -119,7 +119,7 @@ static void get_system_time(uuid_time_t *uuid_time) {
    struct timeval tp;
 
    gettimeofday(&tp, (struct timezone *)0);
-   *uuid_time = (tp.tv_sec * 10000000) + (tp.tv_usec * 10) +
+   *uuid_time = (tp.tv_sec * I64(10000000)) + (tp.tv_usec * I64(10)) +
       I64(0x01B21DD213814000);
 #endif
 }

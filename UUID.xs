@@ -105,7 +105,7 @@ static void format_uuid_v3(
 }
 
 static void get_system_time(uuid_time_t *uuid_time) {
-#if defined __CYGWIN__
+#if defined __CYGWIN__ || __MINGW32__
    ULARGE_INTEGER time;
 
    GetSystemTimeAsFileTime((FILETIME *)&time);
@@ -126,7 +126,7 @@ static void get_system_time(uuid_time_t *uuid_time) {
 
 static void get_random_info(unsigned char seed[16]) {
    MD5_CTX c;
-#if defined __CYGWIN__
+#if defined __CYGWIN__ || __MINGW32__
    typedef struct {
       MEMORYSTATUS  m;
       SYSTEM_INFO   s;
@@ -147,7 +147,7 @@ static void get_random_info(unsigned char seed[16]) {
 
    MD5Init(&c);
 
-#if defined __CYGWIN__
+#if defined __CYGWIN__ || __MINGW32__
    GlobalMemoryStatus(&r.m);
    GetSystemInfo(&r.s);
    GetSystemTimeAsFileTime(&r.t);

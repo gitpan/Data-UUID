@@ -8,7 +8,7 @@
 #include <time.h>
 #include "md5.h"
 
-#if defined __cygwin__
+#if defined __cygwin__ || __mingw32__
 #include <windows.h>
 #endif
 #if defined __darwin__

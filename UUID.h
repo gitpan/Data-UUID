@@ -8,8 +8,11 @@
 #include <time.h>
 #include "md5.h"
 
-#if defined __CYGWIN__
+#if defined __cygwin__
 #include <windows.h>
+#endif
+#if defined __darwin__
+#include <sys/file.h>
 #endif
 
 #if !defined _STDIR
@@ -38,12 +41,15 @@ typedef unsigned char      byte;
 typedef unsigned long long unsigned64_t;
 typedef unsigned64_t       uuid_time_t;
 
-#if defined __CYGWIN__
-#define LOCK(f)
-#define UNLOCK(f)
+#if   defined __solaris__ || defined __linux__
+#     define LOCK(f)		lockf(fileno(f),F_LOCK,0);
+#     define UNLOCK(f)		lockf(fileno(f),F_ULOCK,0);
+#elif defined __darwin__
+#     define LOCK(f)		flock(fileno(f),LOCK_EX);
+#     define UNLOCK(f)		flock(fileno(f),LOCK_UN);
 #else
-#define LOCK(f)		lockf(fileno(f),F_LOCK,0);
-#define UNLOCK(f)	lockf(fileno(f),F_ULOCK,0);
+#     define LOCK(f)
+#     define UNLOCK(f)
 #endif
 
 #undef uuid_t

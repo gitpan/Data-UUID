@@ -15,3 +15,7 @@ Revision history for Perl extension Data::UUID.
 0.04 Tue Dec 11 12:03:00 2001
         - fixed padding in create_b64/to_b64string
 	- added advisory locking for state storage
+
+0.05 Tue Feb 12 09:46:00 2002
+        - added custom OS defines
+	- added LOCK/UNLOCK defines for Darwin OS

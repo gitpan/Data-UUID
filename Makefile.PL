@@ -1,4 +1,5 @@
 use ExtUtils::MakeMaker;
+use Config;
 # See lib/ExtUtils/MakeMaker.pm for details of how to influence
 # the contents of the Makefile that is written.
 WriteMakefile(
@@ -18,6 +19,7 @@ WriteMakefile(
        sub {
           do { print "UUID state storage (/var/tmp): ";
           } while !($d = <STDIN>, chop $d, -d $d || !$d);
-	  return { 'DEFINE' => qq(-D_STDIR=\\").($d||"/var/tmp").qq(\\") };
+	  return { 'DEFINE' => qq(-D_STDIR=\\").($d||"/var/tmp").qq(\\").
+		   qq( -D__$Config{osname}__)};
        }
 );

@@ -38,8 +38,13 @@ typedef unsigned char      byte;
 typedef unsigned long long unsigned64_t;
 typedef unsigned64_t       uuid_time_t;
 
-#define LOCK
-#define UNLOCK
+#if defined __CYGWIN__
+#define LOCK(f)
+#define UNLOCK(f)
+#else
+#define LOCK(f)		lockf(fileno(f),F_LOCK,0);
+#define UNLOCK(f)	lockf(fileno(f),F_ULOCK,0);
+#endif
 
 #undef uuid_t
 

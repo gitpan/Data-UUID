@@ -178,6 +178,7 @@ SV* make_ret(const uuid_t u, int type) {
    char          *from, *to;
    STRLEN         len;
    int            i;
+   int            chunk;
 
    memset(buf, 0x00, BUFSIZ);
    switch(type) {
@@ -201,18 +202,22 @@ SV* make_ret(const uuid_t u, int type) {
       break;
    case F_B64:
       from = (unsigned char*)&u; to = buf;
-      while (1) {
-	 c1    = *from++;
+      for(i = sizeof(u); i > 0; i -= 3) {
+	 c1 = *from++;
+	 c2 = *from++;
 	 *to++ = base64[c1>>2];
-	 if (from == ((char*)&u + 16)) {
-	    *to++ = base64[(c1 & 0x3) << 4];
-	    break;
-         }
-         c2   = *from++;
-	 c3   = *from++;
 	 *to++ = base64[((c1 & 0x3) << 4) | ((c2 & 0xF0) >> 4)];
-	 *to++ = base64[((c2 & 0xF) << 2) | ((c3 & 0xC0) >>6)];
-	 *to++ = base64[c3 & 0x3F];
+	 if (i > 2) {
+	    c3 = *from++;
+            *to++ = base64[((c2 & 0xF) << 2) | ((c3 & 0xC0) >>6)];
+	    *to++ = base64[c3 & 0x3F];
+         } else if (i == 2) {
+	    *to++ = base64[(c2 & 0xF) << 2];
+	    *to++ = '=';
+         } else {
+	    *to++ = '=';
+	    *to++ = '=';
+         }
       }
       len = strlen(buf);
       break;
@@ -294,7 +299,6 @@ PREINIT:
    uuid_t       uuid;
    FILE        *fd;
 PPCODE:
-   LOCK;
    clockseq = self->state.cs;
    get_current_time(&timestamp);
    if ( self->state.ts == I64(0) ||
@@ -309,12 +313,13 @@ PPCODE:
    self->state.cs   = clockseq;
    if (timestamp > self->next_save ) {
       if(fd = fopen(UUID_STATE_NV_STORE, "wb")) {
+	 LOCK(fd);
          fwrite(&(self->state), sizeof(uuid_state_t), 1, fd);
+	 UNLOCK(fd);
          fclose(fd);
       }
       self->next_save = timestamp + (10 * 10 * 1000 * 1000);
    }
-   UNLOCK;
    ST(0) = make_ret(uuid, ix);
    XSRETURN(1);
 

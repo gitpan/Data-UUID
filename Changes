@@ -11,3 +11,7 @@ Revision history for Perl extension Data::UUID.
 0.03  Mon Nov 5 12:47:00 2001
         - fixed padding problem in from_b64string
 	- re-tested with Cygwin v2.78.2.15
+
+0.04 Tue Dec 11 12:03:00 2001
+        - fixed padding in create_b64/to_b64string
+	- added advisory locking for state storage

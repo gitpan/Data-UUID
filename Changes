@@ -34,3 +34,7 @@ Revision history for Perl extension Data::UUID.
 
 0.08 Fri Nov 29 12:12:00 2002
 	- added default umask for state storage files (as per James A. Duncan, Fotango.com)
+
+0.10 Thu Jul 17 17:12:00 2003
+	- added support for PERL_MM_USE_DEFAULT as per Heath Malstrom
+	- replaced GetSystemTimeAsFileTime with QueryPerformanceCounter as per Paul Stodghill

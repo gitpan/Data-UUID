@@ -106,9 +106,12 @@ static void format_uuid_v3(
 
 static void get_system_time(uuid_time_t *uuid_time) {
 #if defined __CYGWIN__ || __MINGW32__
-   ULARGE_INTEGER time;
+   /* ULARGE_INTEGER time; */
+   LARGE_INTEGER time;
 
-   GetSystemTimeAsFileTime((FILETIME *)&time);
+   /* use QeryPerformanceCounter for +ms resolution - as per Paul Stodghill 
+   GetSystemTimeAsFileTime((FILETIME *)&time); */
+   QueryPerformanceCounter(&time);
    time.QuadPart +=
       (unsigned __int64) (1000*1000*10) * 
       (unsigned __int64) (60 * 60 * 24) * 

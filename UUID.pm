@@ -1,35 +1,26 @@
 package Data::UUID;
 
-use 5.006;
-use strict;
-use warnings;
 use Carp;
+use vars qw($VERSION @ISA @EXPORT @EXPORT_OK);
 
 require Exporter;
 require DynaLoader;
-use AutoLoader;
+require AutoLoader;
 
-our @ISA = qw(Exporter DynaLoader);
-
+@ISA = qw(Exporter DynaLoader);
 # Items to export into callers namespace by default. Note: do not export
 # names by default without a very good reason. Use EXPORT_OK instead.
 # Do not simply export all your public functions/methods/constants.
-
-# This allows declaration	use Data::UUID ':all';
-# If you do not need this, moving things directly into @EXPORT or @EXPORT_OK
-# will save memory.
-our %EXPORT_TAGS = ( 'all' => [ qw(
+@EXPORT = qw(
    NameSpace_DNS
    NameSpace_OID
    NameSpace_URL
    NameSpace_X500
-) ] );
-
-our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
-
-our @EXPORT = qw(
 );
-our $VERSION = '0.09';
+$VERSION = '0.10';
+
+
+# Preloaded methods go here.
 
 sub AUTOLOAD {
     # This AUTOLOAD is used to 'autoload' constants from the constant()
@@ -60,13 +51,11 @@ sub AUTOLOAD {
 
 bootstrap Data::UUID $VERSION;
 
-# Preloaded methods go here.
-
 # Autoload methods go after =cut, and are processed by the autosplit program.
 
 1;
 __END__
-# Below is stub documentation for your module. You better edit it!
+# Below is the stub of documentation for your module. You better edit it!
 
 =head1 NAME
 

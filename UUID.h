@@ -79,24 +79,6 @@ typedef struct _uuid_context_t {
    uuid_time_t  next_save;
 } uuid_context_t;
 
-int  uuid_create(uuid_t * uuid);
-void uuid_create_from_name(
-   uuid_t * uuid,
-   uuid_t nsid,
-   void * name,
-   int namelen
-);
-int  uuid_compare(uuid_t *u1, uuid_t *u2);
-static int  read_state(
-   unsigned16  *clockseq, 
-   uuid_time_t *timestamp,
-   uuid_node_t * node
-);
-static void write_state(
-   unsigned16   clockseq, 
-   uuid_time_t  timestamp,
-   uuid_node_t  node
-);
 static void format_uuid_v1(
    uuid_t      *uuid, 
    unsigned16   clockseq,
@@ -109,9 +91,8 @@ static void format_uuid_v3(
 );
 static void       get_current_time(uuid_time_t * timestamp);
 static unsigned16 true_random(void);
-static void       get_ieee_node_identifier(uuid_node_t *node);
 static void       get_system_time(uuid_time_t *uuid_time);
-static void       get_random_info(char seed[16]);
+static void       get_random_info(unsigned char seed[16]);
 
 static char   *base64 = 
    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";

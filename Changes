@@ -19,3 +19,12 @@ Revision history for Perl extension Data::UUID.
 0.05 Tue Feb 12 09:46:00 2002
         - added custom OS defines
 	- added LOCK/UNLOCK defines for Darwin OS
+
+0.06 Sun Mar 2 01:41:00 2002
+	- added code to fix ccflags on HP (as per Lincoln Baxter)
+	- fixed state/nodeid sharing problem (as per Lincoln Baxter)
+	- fixed most compiler warnings (as per Lincoln Baxter)
+	- replaced Base64-encode algorithm to fix buffer overflow
+	  (as per Lincoln Baxter).
+	- fixed count of tests in test.pl (as per Lincoln Baxter)
+	- added ok() to every line of test.pl (as per Lincoln Baxter) 

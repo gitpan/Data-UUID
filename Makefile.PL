@@ -2,6 +2,38 @@ use ExtUtils::MakeMaker;
 use Config;
 # See lib/ExtUtils/MakeMaker.pm for details of how to influence
 # the contents of the Makefile that is written.
+
+#added by Lincoln Baxter to fix cflags (for long long on HPUX)
+#guidence from DBD-Oracle module
+{
+    package MY; # SUPER needs package context, $self is not sufficient
+    use strict;
+    use Config;
+    my $os = $^O;
+
+    sub const_cccmd {
+        my ($self) = shift;
+        local($_) = $self->SUPER::const_cccmd(@_);
+	# are we using the non-bundled hpux compiler?
+        if ($os eq "hpux" and $Config::Config{ccflags} =~ /-Aa\b/) {
+            print "Changing -Aa to -Ae for HP-UX in ccmd to allow for long long.\n"
+             if s/-Aa\b/-Ae/g;  # allow "long long" in UUID.h
+        }
+        $_;
+    }
+    sub cflags 
+    {
+        my ($self) = shift;
+        local($_) = $self->SUPER::cflags(@_);
+        # are we using the non-bundled hpux compiler?
+        if ($os eq "hpux" and $Config::Config{ccflags} =~ /-Aa\b/) {
+            print "Changing -Aa to -Ae for HP-UX in cflags.\n"
+             if s/-Aa\b/-Ae/g;  # allow "long long" in UUID.h
+        }
+	$_;
+    }
+};
+
 WriteMakefile(
     'NAME'		=> 'Data::UUID',
     'VERSION_FROM'	=> 'UUID.pm', # finds $VERSION
@@ -19,6 +51,8 @@ WriteMakefile(
        sub {
           do { print "UUID state storage (/var/tmp): ";
           } while !($d = <STDIN>, chop $d, -d $d || !$d);
+          chmod(0666, sprintf("%s/%s", $d||"/var/tmp", ".UUID_NODEID"));
+          chmod(0666, sprintf("%s/%s", $d||"/var/tmp", ".UUID_STATE"));
 	  return { 'DEFINE' => qq(-D_STDIR=\\").($d||"/var/tmp").qq(\\").
 		   qq( -D__$Config{osname}__)};
        }

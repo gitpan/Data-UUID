@@ -7,38 +7,31 @@ static  uuid_t NameSpace_DNS = { /* 6ba7b810-9dad-11d1-80b4-00c04fd430c8 */
    0x6ba7b810,
    0x9dad,
    0x11d1,
-   0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8
+   0x80, 0xb4, { 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8 }
 };
 
 static  uuid_t NameSpace_URL = { /* 6ba7b811-9dad-11d1-80b4-00c04fd430c8 */
    0x6ba7b811,
    0x9dad,
    0x11d1,
-   0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8
+   0x80, 0xb4, { 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8 }
 };
 
 static  uuid_t NameSpace_OID = { /* 6ba7b812-9dad-11d1-80b4-00c04fd430c8 */
    0x6ba7b812,
    0x9dad,
    0x11d1,
-   0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8
+   0x80, 0xb4, { 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8 }
 };
 
 uuid_t NameSpace_X500 = { /* 6ba7b814-9dad-11d1-80b4-00c04fd430c8 */
    0x6ba7b814,
    0x9dad,
    0x11d1,
-   0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8
+   0x80, 0xb4, { 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8 }
 };
 
-static int
-not_here(char *s)
-{
-    croak("%s not implemented on this architecture", s);
-    return -1;
-}
-
-void format_uuid_v1(
+static void format_uuid_v1(
    uuid_t     *uuid, 
    unsigned16  clock_seq, 
    uuid_time_t timestamp, 
@@ -54,9 +47,9 @@ void format_uuid_v1(
    uuid->clock_seq_hi_and_reserved = (clock_seq & 0x3F00) >> 8;
    uuid->clock_seq_hi_and_reserved |= 0x80;
    memcpy(&uuid->node, &node, sizeof uuid->node);
-};
+}
 
-void get_current_time(uuid_time_t * timestamp) {
+static void get_current_time(uuid_time_t * timestamp) {
    uuid_time_t        time_now;
    static uuid_time_t time_last;
    static unsigned16  uuids_this_tick;
@@ -80,7 +73,7 @@ void get_current_time(uuid_time_t * timestamp) {
       };
    };
    *timestamp = time_now + uuids_this_tick;
-};
+}
 
 static unsigned16 true_random(void) {
    static int  inited = 0;
@@ -95,7 +88,7 @@ static unsigned16 true_random(void) {
     return (rand());
 }
 
-void format_uuid_v3(
+static void format_uuid_v3(
    uuid_t        *uuid, 
    unsigned char  hash[16]
 ) {
@@ -109,9 +102,9 @@ void format_uuid_v3(
    uuid->time_hi_and_version |= (3 << 12);
    uuid->clock_seq_hi_and_reserved &= 0x3F;
    uuid->clock_seq_hi_and_reserved |= 0x80;
-};
+}
 
-void get_system_time(uuid_time_t *uuid_time) {
+static void get_system_time(uuid_time_t *uuid_time) {
 #if defined __CYGWIN__
    ULARGE_INTEGER time;
 
@@ -129,9 +122,9 @@ void get_system_time(uuid_time_t *uuid_time) {
    *uuid_time = (tp.tv_sec * 10000000) + (tp.tv_usec * 10) +
       I64(0x01B21DD213814000);
 #endif
-};
+}
 
-void get_random_info(char seed[16]) {
+static void get_random_info(unsigned char seed[16]) {
    MD5_CTX c;
 #if defined __CYGWIN__
    typedef struct {
@@ -170,15 +163,13 @@ void get_random_info(char seed[16]) {
 
    MD5Update(&c, (unsigned char*)&r, sizeof(randomness));
    MD5Final(seed, &c);
-};
+}
 
 SV* make_ret(const uuid_t u, int type) {
-   unsigned char  c1, c2, c3;
    char           buf[BUFSIZ];
-   char          *from, *to;
+   unsigned char *from, *to;
    STRLEN         len;
    int            i;
-   int            chunk;
 
    memset(buf, 0x00, BUFSIZ);
    switch(type) {
@@ -187,38 +178,40 @@ SV* make_ret(const uuid_t u, int type) {
       len = sizeof(uuid_t);
       break;
    case F_STR:
-      sprintf(buf, "%8.8X-%4.4X-%4.4X-%2.2X%2.2X-", u.time_low, u.time_mid,
+      sprintf(buf, "%8.8X-%4.4X-%4.4X-%2.2X%2.2X-", (unsigned int)u.time_low, u.time_mid,
 	 u.time_hi_and_version, u.clock_seq_hi_and_reserved, u.clock_seq_low);
       for(i = 0; i < 6; i++ ) 
 	 sprintf(buf+strlen(buf), "%2.2X", u.node[i]);
       len = strlen(buf);
       break;
    case F_HEX:
-      sprintf(buf, "0x%8.8X%4.4X%4.4X%2.2X%2.2X", u.time_low, u.time_mid,
+      sprintf(buf, "0x%8.8X%4.4X%4.4X%2.2X%2.2X", (unsigned int)u.time_low, u.time_mid,
 	 u.time_hi_and_version, u.clock_seq_hi_and_reserved, u.clock_seq_low);
       for(i = 0; i < 6; i++ ) 
 	 sprintf(buf+strlen(buf), "%2.2X", u.node[i]);
       len = strlen(buf);
       break;
    case F_B64:
-      from = (unsigned char*)&u; to = buf;
-      for(i = sizeof(u); i > 0; i -= 3) {
-	 c1 = *from++;
-	 c2 = *from++;
-	 *to++ = base64[c1>>2];
-	 *to++ = base64[((c1 & 0x3) << 4) | ((c2 & 0xF0) >> 4)];
-	 if (i > 2) {
-	    c3 = *from++;
-            *to++ = base64[((c2 & 0xF) << 2) | ((c3 & 0xC0) >>6)];
-	    *to++ = base64[c3 & 0x3F];
-         } else if (i == 2) {
-	    *to++ = base64[(c2 & 0xF) << 2];
-	    *to++ = '=';
-         } else {
+      for(from = (unsigned char*)&u, to = (unsigned char*)buf, i = sizeof(u); 
+	  i > 0; i -= 3, from += 3) {
+         *to++ = base64[from[0]>>2];
+         switch(i) {
+	 case 1:
+	    *to++ = base64[(from[0]&0x03)<<4];
 	    *to++ = '=';
 	    *to++ = '=';
+	     break;
+         case 2:
+	    *to++ = base64[((from[0]&0x03)<<4) | ((from[1]&0xF0)>>4)];
+	    *to++ = base64[(from[1]&0x0F)<<2];
+	    *to++ = '=';
+	     break;
+         default:
+	    *to++ = base64[((from[0]&0x03)<<4) | ((from[1]&0xF0)>>4)];
+	    *to++ = base64[((from[1]&0x0F)<<2) | ((from[2]&0xC0)>>6)];
+	    *to++ = base64[(from[2]&0x3F)];
          }
-      }
+      }	    
       len = strlen(buf);
       break;
    default:
@@ -226,7 +219,7 @@ SV* make_ret(const uuid_t u, int type) {
       break;
    }
    return sv_2mortal(newSVpv(buf,len));
-};
+}
       
 MODULE = Data::UUID		PACKAGE = Data::UUID		
 
@@ -240,7 +233,6 @@ PREINIT:
 INPUT:
    SV   *sv
    char *s = SvPV(sv, len);
-   int	 arg
 PPCODE:
    pv = 0; len = sizeof(uuid_t);
    if (strEQ(s,"NameSpace_DNS"))
@@ -258,29 +250,32 @@ uuid_context_t*
 new(class)
    char *class;
 PREINIT:
-   FILE        *fd;
-   char         seed[16];
-   uuid_time_t  timestamp;
+   FILE          *fd;
+   unsigned char  seed[16];
+   uuid_time_t    timestamp;
+   mode_t         mask;
 CODE:
    Newz(0,RETVAL,1,uuid_context_t);
-   if (fd = fopen(UUID_STATE_NV_STORE, "rb")) {
+   if ((fd = fopen(UUID_STATE_NV_STORE, "rb"))) {
       fread(&(RETVAL->state), sizeof(uuid_state_t), 1, fd);
       fclose(fd);
+      get_current_time(&timestamp);
+      RETVAL->next_save = timestamp;
    }
-   if (fd = fopen(UUID_NODEID_NV_STORE, "rb")) {
+   if ((fd = fopen(UUID_NODEID_NV_STORE, "rb"))) {
       fread(&(RETVAL->nodeid), sizeof(uuid_node_t), 1, fd );
       fclose(fd);
    } else {
       get_random_info(seed);
       seed[0] |= 0x80;
       memcpy(&(RETVAL->nodeid), seed, sizeof(uuid_node_t));
-      if (fd = fopen(UUID_NODEID_NV_STORE, "wb")) {
+      mask = umask(0);
+      if ((fd = fopen(UUID_NODEID_NV_STORE, "wb"))) {
          fwrite(&(RETVAL->nodeid), sizeof(uuid_node_t), 1, fd);
          fclose(fd);
       };
+      umask(mask);
    }
-   get_current_time(&timestamp);
-   RETVAL->next_save = timestamp;
    errno = 0; 
 OUTPUT:
    RETVAL
@@ -298,6 +293,7 @@ PREINIT:
    unsigned16   clockseq;
    uuid_t       uuid;
    FILE        *fd;
+   mode_t       mask;
 PPCODE:
    clockseq = self->state.cs;
    get_current_time(&timestamp);
@@ -312,12 +308,14 @@ PPCODE:
    self->state.ts   = timestamp;
    self->state.cs   = clockseq;
    if (timestamp > self->next_save ) {
-      if(fd = fopen(UUID_STATE_NV_STORE, "wb")) {
+      mask = umask(0);
+      if((fd = fopen(UUID_STATE_NV_STORE, "wb"))) {
 	 LOCK(fd);
          fwrite(&(self->state), sizeof(uuid_state_t), 1, fd);
 	 UNLOCK(fd);
          fclose(fd);
       }
+      umask(mask);
       self->next_save = timestamp + (10 * 10 * 1000 * 1000);
    }
    ST(0) = make_ret(uuid, ix);
@@ -383,10 +381,6 @@ to_string(self,uuid)
 ALIAS:
    Data::UUID::to_hexstring = F_HEX
    Data::UUID::to_b64string = F_B64
-PREINIT:
-   STRLEN len;
-   char   buf[BUFSIZ];
-   int    i;
 PPCODE:
    ST(0) = make_ret(*uuid, ix ? ix : F_STR);
    XSRETURN(1);
@@ -429,7 +423,7 @@ PPCODE:
       while(from < (str + strlen(str))) {
 	 i = 0; memset(buf, 254, 4);
 	 do {
-	    c = index64[*from++];
+	    c = index64[(int)*from++];
 	    if (c != 255) buf[i++] = (unsigned char)c;
 	    if (from == (str + strlen(str))) 
 	       break;
@@ -459,8 +453,10 @@ DESTROY(self)
 PREINIT:
    FILE           *fd;
 CODE:
-   if (fd = fopen(UUID_NODEID_NV_STORE, "wb")) {
-      fwrite(&(self->nodeid), sizeof(uuid_node_t), 1, fd);
+   if ((fd = fopen(UUID_STATE_NV_STORE, "wb"))) {
+      LOCK(fd);
+      fwrite(&(self->state), sizeof(uuid_state_t), 1, fd);
+      UNLOCK(fd);
       fclose(fd);
    };
    Safefree(self);

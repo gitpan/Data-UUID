@@ -30,7 +30,7 @@
 extern "C" {
 #endif
 
-/* GLOBAL.H - RSAREF types and constants
+/* GLOBAL.H - RSAREF types and constants */
 
 /* Copyright (C) RSA Laboratories, a division of RSA Data Security,
      Inc., created 1991. All rights reserved.

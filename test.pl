@@ -6,7 +6,7 @@
 # change 'tests => 1' to 'tests => last_test_to_print';
 
 use Test;
-BEGIN { plan tests => 1 };
+BEGIN { plan tests => 11 };
 use Data::UUID;
 ok(1); # If we made it this far, we're ok.
 
@@ -17,14 +17,14 @@ ok(1); # If we made it this far, we're ok.
 
 ok($ug = new Data::UUID);
 
-$uuid1 = $ug->create();
-$uuid2 = $ug->to_hexstring($uuid1);
-$uuid3 = $ug->from_string($uuid2);
-ok(!$ug->compare($uuid1,$uuid3));
+ok($uuid1 = $ug->create()); #3
+ok($uuid2 = $ug->to_hexstring($uuid1));
+ok($uuid3 = $ug->from_string($uuid2));
+ok(!$ug->compare($uuid1,$uuid3)); #6
 
-$uuid4 = $ug->to_b64string($uuid1);
-$uuid5 = $ug->to_b64string($uuid3);
+ok($uuid4 = $ug->to_b64string($uuid1));
+ok($uuid5 = $ug->to_b64string($uuid3));
 ok($uuid4 eq $uuid5);
 
-$uuid6 = $ug->from_b64string($uuid4);
-ok(!$ug->compare($uuid6,$uuid1));
+ok($uuid6 = $ug->from_b64string($uuid5));
+ok(!$ug->compare($uuid6,$uuid1)); #11

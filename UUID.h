@@ -18,6 +18,9 @@
 #if !defined _STDIR
 #    define  _STDIR			"/var/tmp"
 #endif
+#if !defined _DEFAULT_UMASK
+#    define  _DEFAULT_UMASK		0007
+#endif
 
 #define UUID_STATE			".UUID_STATE"
 #define UUID_NODEID			".UUID_NODEID"

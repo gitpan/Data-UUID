@@ -269,7 +269,7 @@ CODE:
       get_random_info(seed);
       seed[0] |= 0x80;
       memcpy(&(RETVAL->nodeid), seed, sizeof(uuid_node_t));
-      mask = umask(0);
+      mask = umask(_DEFAULT_UMASK);
       if ((fd = fopen(UUID_NODEID_NV_STORE, "wb"))) {
          fwrite(&(RETVAL->nodeid), sizeof(uuid_node_t), 1, fd);
          fclose(fd);
@@ -308,7 +308,7 @@ PPCODE:
    self->state.ts   = timestamp;
    self->state.cs   = clockseq;
    if (timestamp > self->next_save ) {
-      mask = umask(0);
+      mask = umask(_DEFAULT_UMASK);
       if((fd = fopen(UUID_STATE_NV_STORE, "wb"))) {
 	 LOCK(fd);
          fwrite(&(self->state), sizeof(uuid_state_t), 1, fd);

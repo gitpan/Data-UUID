@@ -112,26 +112,62 @@ void format_uuid_v3(
 };
 
 void get_system_time(uuid_time_t *uuid_time) {
+#if defined __CYGWIN__
+   ULARGE_INTEGER time;
+
+   GetSystemTimeAsFileTime((FILETIME *)&time);
+   time.QuadPart +=
+      (unsigned __int64) (1000*1000*10) * 
+      (unsigned __int64) (60 * 60 * 24) * 
+      (unsigned __int64) (17+30+31+365*18+5);
+
+   *uuid_time = time.QuadPart;
+#else
    struct timeval tp;
 
    gettimeofday(&tp, (struct timezone *)0);
    *uuid_time = (tp.tv_sec * 10000000) + (tp.tv_usec * 10) +
       I64(0x01B21DD213814000);
+#endif
 };
 
 void get_random_info(char seed[16]) {
    MD5_CTX c;
+#if defined __CYGWIN__
+   typedef struct {
+      MEMORYSTATUS  m;
+      SYSTEM_INFO   s;
+      FILETIME      t;
+      LARGE_INTEGER pc;
+      DWORD         tc;
+      DWORD         l;
+      char          hostname[MAX_COMPUTERNAME_LENGTH + 1];
+   } randomness;
+#else
    typedef struct {
       long           hostid;
       struct timeval t;
       char           hostname[257];
    } randomness;
+#endif
    randomness r;
 
    MD5Init(&c);
+
+#if defined __CYGWIN__
+   GlobalMemoryStatus(&r.m);
+   GetSystemInfo(&r.s);
+   GetSystemTimeAsFileTime(&r.t);
+   QueryPerformanceCounter(&r.pc);
+   r.tc = GetTickCount();
+   r.l = MAX_COMPUTERNAME_LENGTH + 1;
+   GetComputerName(r.hostname, &r.l );
+#else
    r.hostid = gethostid();
    gettimeofday(&r.t, (struct timezone *)0);
    gethostname(r.hostname, 256);
+#endif
+
    MD5Update(&c, (unsigned char*)&r, sizeof(randomness));
    MD5Final(seed, &c);
 };
@@ -386,21 +422,22 @@ PPCODE:
    case F_B64:
       from = str; to = (char*)&uuid;
       while(from < (str + strlen(str))) {
-	 i = 0; memset(buf, 255, 4);
+	 i = 0; memset(buf, 254, 4);
 	 do {
 	    c = index64[*from++];
 	    if (c != 255) buf[i++] = (unsigned char)c;
 	    if (from == (str + strlen(str))) 
 	       break;
          } while (i < 4);
-	 if (buf[0] == 254 || buf[1] == 254)
+
+	 if (buf[0] == 254 || buf[1] == 254) 
 	    break;
          *to++ = (buf[0] << 2) | ((buf[1] & 0x30) >> 4);
+
 	 if (buf[2] == 254) break;
-
 	 *to++ = ((buf[1] & 0x0F) << 4) | ((buf[2] & 0x3C) >> 2);
-	 if (buf[3] == 254) break;
 
+	 if (buf[3] == 254) break;
 	 *to++ = ((buf[2] & 0x03) << 6) | buf[3];
       }
       break;

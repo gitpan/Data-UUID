@@ -4,3 +4,10 @@ Revision history for Perl extension Data::UUID.
 	- original version; created by h2xs 1.21 with options
 		-f -nData::UUID -v0.01
 
+0.02  Wed Oct 31 12:11:00 2001
+        - fixed from_string/from_hexstring bug, which caused
+	  problems on little endian machines (linux)
+
+0.03  Mon Nov 5 12:47:00 2001
+        - fixed padding problem in from_b64string
+	- re-tested with Cygwin v2.78.2.15

@@ -8,6 +8,10 @@
 #include <time.h>
 #include "md5.h"
 
+#if defined __CYGWIN__
+#include <windows.h>
+#endif
+
 #if !defined _STDIR
 #    define  _STDIR			"/var/tmp"
 #endif

@@ -48,6 +48,7 @@ void format_uuid_v1(
    uuid->time_mid = (unsigned short)((timestamp >> 32) & 0xFFFF);
    uuid->time_hi_and_version = (unsigned short)((timestamp >> 48) &
       0x0FFF);
+
    uuid->time_hi_and_version |= (1 << 12);
    uuid->clock_seq_low = clock_seq & 0xFF;
    uuid->clock_seq_hi_and_reserved = (clock_seq & 0x3F00) >> 8;
@@ -378,6 +379,9 @@ PPCODE:
          ((unsigned char*)&uuid)[i] = (unsigned char)c;
          from += 2;
       }
+      uuid.time_low            = ntohl(uuid.time_low);
+      uuid.time_mid            = ntohs(uuid.time_mid);
+      uuid.time_hi_and_version = ntohs(uuid.time_hi_and_version);
       break;
    case F_B64:
       from = str; to = (char*)&uuid;

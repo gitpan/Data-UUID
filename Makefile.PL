@@ -49,18 +49,16 @@ WriteMakefile(
     'OBJECT'		=> '$(O_FILES)', # link all the C files too
     'CONFIGURE'         => 
        sub {
-	  my ($d, $m);
-	  # automate installations - as per Heath Malmstrom
-	  if(!$ENV{PERL_MM_USE_DEFAULT}) {
-             do { print "UUID state storage (/var/tmp): ";
-             } while !($d = <STDIN>, chop $d, -d $d || !$d);
-	     do { print "default umask (0007): ";
-	     } while !($m = <STDIN>, chop $m, ($m =~ /[0-7]{3}/) || !$m);
-          }
-          chmod(0666, sprintf("%s/%s", $d||"/var/tmp", ".UUID_NODEID"));
-          chmod(0666, sprintf("%s/%s", $d||"/var/tmp", ".UUID_STATE"));
-	  return { 'DEFINE' => qq(-D_STDIR=\\").($d||"/var/tmp").qq(\\").
+	  my $d = '/var/tmp';
+          $d = prompt("UUID state storage", $d);
+          
+          my $m = '0007';
+          $m = prompt("default umask", $m);
+
+          chmod(0666, sprintf("%s/%s", $d, ".UUID_NODEID"));
+          chmod(0666, sprintf("%s/%s", $d, ".UUID_STATE"));
+	  return { 'DEFINE' => qq(-D_STDIR=\\"$d\\").
 		   qq( -D__$Config{osname}__).
-		   qq( -D_DEFAULT_UMASK=).($m||"0007")};
+		   qq( -D_DEFAULT_UMASK=$m)};
        }
 );

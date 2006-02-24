@@ -17,7 +17,7 @@ require AutoLoader;
    NameSpace_URL
    NameSpace_X500
 );
-$VERSION = '0.11';
+$VERSION = '0.12_01';
 
 
 # Preloaded methods go here.
@@ -91,11 +91,11 @@ across network-connected systems.
 
 The algorithm for UUID generation, used by this extension, is described in the
 Internet Draft "UUIDs and GUIDs" by Paul J. Leach and Rich Salz
-(L<http://www.globecom.net/ietf/draft/draft-leach-uuids-guids-01.html>). It
-provides reasonably efficient and reliable framework for generating UUIDs and
-supports fairly high allocation rates -- 10 million per second per machine --
-and therefore is suitable for identifying both extremely short-lived and very
-persistent objects on a given system as well as across the network.
+(L<http://hegel.ittc.ku.edu/topics/internet/internet-drafts/draft-l/draft-leach-uuids-guids-01.txt>).
+It provides reasonably efficient and reliable framework for generating UUIDs
+and supports fairly high allocation rates -- 10 million per second per machine
+-- and therefore is suitable for identifying both extremely short-lived and
+very persistent objects on a given system as well as across the network.
 
 This modules provides several methods to create a UUID:
  

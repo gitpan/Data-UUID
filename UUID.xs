@@ -3,28 +3,28 @@
 #include "XSUB.h"
 #include "UUID.h"
 
-static  uuid_t NameSpace_DNS = { /* 6ba7b810-9dad-11d1-80b4-00c04fd430c8 */
+static  perl_uuid_t NameSpace_DNS = { /* 6ba7b810-9dad-11d1-80b4-00c04fd430c8 */
    0x6ba7b810,
    0x9dad,
    0x11d1,
    0x80, 0xb4, { 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8 }
 };
 
-static  uuid_t NameSpace_URL = { /* 6ba7b811-9dad-11d1-80b4-00c04fd430c8 */
+static  perl_uuid_t NameSpace_URL = { /* 6ba7b811-9dad-11d1-80b4-00c04fd430c8 */
    0x6ba7b811,
    0x9dad,
    0x11d1,
    0x80, 0xb4, { 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8 }
 };
 
-static  uuid_t NameSpace_OID = { /* 6ba7b812-9dad-11d1-80b4-00c04fd430c8 */
+static  perl_uuid_t NameSpace_OID = { /* 6ba7b812-9dad-11d1-80b4-00c04fd430c8 */
    0x6ba7b812,
    0x9dad,
    0x11d1,
    0x80, 0xb4, { 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8 }
 };
 
-uuid_t NameSpace_X500 = { /* 6ba7b814-9dad-11d1-80b4-00c04fd430c8 */
+perl_uuid_t NameSpace_X500 = { /* 6ba7b814-9dad-11d1-80b4-00c04fd430c8 */
    0x6ba7b814,
    0x9dad,
    0x11d1,
@@ -32,9 +32,9 @@ uuid_t NameSpace_X500 = { /* 6ba7b814-9dad-11d1-80b4-00c04fd430c8 */
 };
 
 static void format_uuid_v1(
-   uuid_t     *uuid, 
+   perl_uuid_t     *uuid, 
    unsigned16  clock_seq, 
-   uuid_time_t timestamp, 
+   perl_uuid_time_t timestamp, 
    uuid_node_t node
 ) {
    uuid->time_low = (unsigned long)(timestamp & 0xFFFFFFFF);
@@ -49,9 +49,9 @@ static void format_uuid_v1(
    memcpy(&uuid->node, &node, sizeof uuid->node);
 }
 
-static void get_current_time(uuid_time_t * timestamp) {
-   uuid_time_t        time_now;
-   static uuid_time_t time_last;
+static void get_current_time(perl_uuid_time_t * timestamp) {
+   perl_uuid_time_t        time_now;
+   static perl_uuid_time_t time_last;
    static unsigned16  uuids_this_tick;
    static int         inited = 0;
 
@@ -77,7 +77,7 @@ static void get_current_time(uuid_time_t * timestamp) {
 
 static unsigned16 true_random(void) {
    static int  inited = 0;
-   uuid_time_t time_now;
+   perl_uuid_time_t time_now;
 
    if (!inited) {
       get_system_time(&time_now);
@@ -89,10 +89,10 @@ static unsigned16 true_random(void) {
 }
 
 static void format_uuid_v3(
-   uuid_t        *uuid, 
+   perl_uuid_t        *uuid, 
    unsigned char  hash[16]
 ) {
-   memcpy(uuid, hash, sizeof(uuid_t));
+   memcpy(uuid, hash, sizeof(perl_uuid_t));
 
    uuid->time_low            = ntohl(uuid->time_low);
    uuid->time_mid            = ntohs(uuid->time_mid);
@@ -104,8 +104,8 @@ static void format_uuid_v3(
    uuid->clock_seq_hi_and_reserved |= 0x80;
 }
 
-static void get_system_time(uuid_time_t *uuid_time) {
-#if defined __CYGWIN__ || __MINGW32__
+static void get_system_time(perl_uuid_time_t *perl_uuid_time) {
+#if defined __CYGWIN__ || __MINGW32__ || WIN32
    /* ULARGE_INTEGER time; */
    LARGE_INTEGER time;
 
@@ -117,19 +117,19 @@ static void get_system_time(uuid_time_t *uuid_time) {
       (unsigned __int64) (60 * 60 * 24) * 
       (unsigned __int64) (17+30+31+365*18+5);
 
-   *uuid_time = time.QuadPart;
+   *perl_uuid_time = time.QuadPart;
 #else
    struct timeval tp;
 
    gettimeofday(&tp, (struct timezone *)0);
-   *uuid_time = (tp.tv_sec * I64(10000000)) + (tp.tv_usec * I64(10)) +
+   *perl_uuid_time = (tp.tv_sec * I64(10000000)) + (tp.tv_usec * I64(10)) +
       I64(0x01B21DD213814000);
 #endif
 }
 
 static void get_random_info(unsigned char seed[16]) {
    MD5_CTX c;
-#if defined __CYGWIN__ || __MINGW32__
+#if defined __CYGWIN__ || __MINGW32__ || WIN32
    typedef struct {
       MEMORYSTATUS  m;
       SYSTEM_INFO   s;
@@ -150,7 +150,7 @@ static void get_random_info(unsigned char seed[16]) {
 
    MD5Init(&c);
 
-#if defined __CYGWIN__ || __MINGW32__
+#if defined __CYGWIN__ || __MINGW32__ || WIN32
    GlobalMemoryStatus(&r.m);
    GetSystemInfo(&r.s);
    GetSystemTimeAsFileTime(&r.t);
@@ -168,7 +168,7 @@ static void get_random_info(unsigned char seed[16]) {
    MD5Final(seed, &c);
 }
 
-SV* make_ret(const uuid_t u, int type) {
+SV* make_ret(const perl_uuid_t u, int type) {
    char           buf[BUFSIZ];
    unsigned char *from, *to;
    STRLEN         len;
@@ -177,8 +177,8 @@ SV* make_ret(const uuid_t u, int type) {
    memset(buf, 0x00, BUFSIZ);
    switch(type) {
    case F_BIN:
-      memcpy(buf, (void*)&u, sizeof(uuid_t));
-      len = sizeof(uuid_t);
+      memcpy(buf, (void*)&u, sizeof(perl_uuid_t));
+      len = sizeof(perl_uuid_t);
       break;
    case F_STR:
       sprintf(buf, "%8.8X-%4.4X-%4.4X-%2.2X%2.2X-", (unsigned int)u.time_low, u.time_mid,
@@ -237,7 +237,7 @@ INPUT:
    SV   *sv
    char *s = SvPV(sv, len);
 PPCODE:
-   pv = 0; len = sizeof(uuid_t);
+   pv = 0; len = sizeof(perl_uuid_t);
    if (strEQ(s,"NameSpace_DNS"))
       pv = (char*)&NameSpace_DNS;
    if (strEQ(s,"NameSpace_URL"))
@@ -255,7 +255,7 @@ new(class)
 PREINIT:
    FILE          *fd;
    unsigned char  seed[16];
-   uuid_time_t    timestamp;
+   perl_uuid_time_t    timestamp;
    mode_t         mask;
 CODE:
    Newz(0,RETVAL,1,uuid_context_t);
@@ -266,8 +266,11 @@ CODE:
       RETVAL->next_save = timestamp;
    }
    if ((fd = fopen(UUID_NODEID_NV_STORE, "rb"))) {
+      pid_t *hate = (pid_t *) &(RETVAL->nodeid); 
       fread(&(RETVAL->nodeid), sizeof(uuid_node_t), 1, fd );
       fclose(fd);
+      
+      *hate += getpid();
    } else {
       get_random_info(seed);
       seed[0] |= 0x80;
@@ -292,9 +295,9 @@ ALIAS:
    Data::UUID::create_hex = F_HEX
    Data::UUID::create_b64 = F_B64
 PREINIT:
-   uuid_time_t  timestamp;
+   perl_uuid_time_t  timestamp;
    unsigned16   clockseq;
-   uuid_t       uuid;
+   perl_uuid_t       uuid;
    FILE        *fd;
    mode_t       mask;
 PPCODE:
@@ -327,7 +330,7 @@ PPCODE:
 void
 create_from_name(self,nsid,name)
    uuid_context_t *self;
-   uuid_t         *nsid;
+   perl_uuid_t         *nsid;
    char           *name;
 ALIAS:
    Data::UUID::create_from_name_bin = F_BIN
@@ -337,8 +340,8 @@ ALIAS:
 PREINIT:
    MD5_CTX       c;
    unsigned char hash[16];
-   uuid_t        net_nsid; 
-   uuid_t        uuid;
+   perl_uuid_t        net_nsid; 
+   perl_uuid_t        uuid;
 PPCODE:
    net_nsid = *nsid;
    net_nsid.time_low            = htonl(net_nsid.time_low);
@@ -346,7 +349,7 @@ PPCODE:
    net_nsid.time_hi_and_version = htons(net_nsid.time_hi_and_version);
 
    MD5Init(&c);
-   MD5Update(&c, (unsigned char*)&net_nsid, sizeof(uuid_t));
+   MD5Update(&c, (unsigned char*)&net_nsid, sizeof(perl_uuid_t));
    MD5Update(&c, (unsigned char*)name, strlen(name));
    MD5Final(hash, &c);
 
@@ -357,8 +360,8 @@ PPCODE:
 int 
 compare(self,u1,u2)
    uuid_context_t *self;
-   uuid_t         *u1; 
-   uuid_t         *u2;
+   perl_uuid_t         *u1; 
+   perl_uuid_t         *u2;
 PREINIT:
    int i;
 CODE:
@@ -380,7 +383,7 @@ OUTPUT:
 void
 to_string(self,uuid)
    uuid_context_t *self;
-   uuid_t         *uuid;
+   perl_uuid_t         *uuid;
 ALIAS:
    Data::UUID::to_hexstring = F_HEX
    Data::UUID::to_b64string = F_B64
@@ -396,7 +399,7 @@ ALIAS:
    Data::UUID::from_hexstring = F_HEX
    Data::UUID::from_b64string = F_B64
 PREINIT:
-   uuid_t         uuid;
+   perl_uuid_t         uuid;
    char          *from, *to;
    int            i, c;
    unsigned char  buf[4];
@@ -406,10 +409,10 @@ PPCODE:
    case F_STR:
    case F_HEX:
       from = str;
-      memset(&uuid, 0x00, sizeof(uuid_t));
+      memset(&uuid, 0x00, sizeof(perl_uuid_t));
       if ( from[0] == '0' && from[1] == 'x' )
          from += 2;
-      for (i = 0; i < sizeof(uuid_t); i++) {
+      for (i = 0; i < sizeof(perl_uuid_t); i++) {
          if (*from == '-')
 	    from++; 
          if (sscanf(from, "%2x", &c) != 1) 

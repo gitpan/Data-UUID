@@ -4,6 +4,9 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#ifndef WIN32
+#include <unistd.h>
+#endif
 #include <unistd.h>
 #include <time.h>
 #include "md5.h"
@@ -59,12 +62,12 @@
 
 #define CHECK(f1, f2) if (f1 != f2) RETVAL = f1 < f2 ? -1 : 1;
 
-typedef unsigned long      unsigned32;
+typedef unsigned int       unsigned32;
 typedef unsigned short     unsigned16;
 typedef unsigned char      unsigned8;
 typedef unsigned char      byte;
 typedef unsigned long long unsigned64_t;
-typedef unsigned64_t       uuid_time_t;
+typedef unsigned64_t       perl_uuid_time_t;
 
 #if   defined __solaris__ || defined __linux__
 #     define LOCK(f)		lockf(fileno(f),F_LOCK,0);
@@ -77,23 +80,23 @@ typedef unsigned64_t       uuid_time_t;
 #     define UNLOCK(f)
 #endif
 
-#undef uuid_t
+#undef perl_uuid_t
 
 typedef struct _uuid_node_t {
    char nodeID[6];
 } uuid_node_t;
 
-typedef struct _uuid_t {
+typedef struct _perl_uuid_t {
    unsigned32          time_low;
    unsigned16          time_mid;
    unsigned16          time_hi_and_version;
    unsigned8           clock_seq_hi_and_reserved;
    unsigned8           clock_seq_low;
    byte                node[6];
-} uuid_t;
+} perl_uuid_t;
 
 typedef struct _uuid_state_t { 
-   uuid_time_t ts;
+   perl_uuid_time_t ts;
    uuid_node_t node;
    unsigned16  cs;  
 } uuid_state_t;
@@ -101,22 +104,22 @@ typedef struct _uuid_state_t {
 typedef struct _uuid_context_t {
    uuid_state_t state;
    uuid_node_t  nodeid;
-   uuid_time_t  next_save;
+   perl_uuid_time_t  next_save;
 } uuid_context_t;
 
 static void format_uuid_v1(
-   uuid_t      *uuid, 
+   perl_uuid_t      *uuid, 
    unsigned16   clockseq,
-   uuid_time_t  timestamp, 
+   perl_uuid_time_t  timestamp, 
    uuid_node_t  node
 );
 static void format_uuid_v3(
-   uuid_t      *uuid, 
+   perl_uuid_t      *uuid, 
    unsigned     char hash[16]
 );
-static void       get_current_time(uuid_time_t * timestamp);
+static void       get_current_time(perl_uuid_time_t * timestamp);
 static unsigned16 true_random(void);
-static void       get_system_time(uuid_time_t *uuid_time);
+static void       get_system_time(perl_uuid_time_t *perl_uuid_time);
 static void       get_random_info(unsigned char seed[16]);
 
 static char   *base64 = 

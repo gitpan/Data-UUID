@@ -1,4 +1,4 @@
-uuid_t*			T_PV
+perl_uuid_t*			T_PV
 uuid_context_t*		T_PTRUUID
 
 INPUT

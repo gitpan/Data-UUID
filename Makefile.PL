@@ -14,7 +14,7 @@ use Config;
     sub const_cccmd {
         my ($self) = shift;
         local($_) = $self->SUPER::const_cccmd(@_);
-	# are we using the non-bundled hpux compiler?
+        # are we using the non-bundled hpux compiler?
         if ($os eq "hpux" and $Config::Config{ccflags} =~ /-Aa\b/) {
             print "Changing -Aa to -Ae for HP-UX in ccmd to allow for long long.\n"
              if s/-Aa\b/-Ae/g;  # allow "long long" in UUID.h
@@ -30,35 +30,38 @@ use Config;
             print "Changing -Aa to -Ae for HP-UX in cflags.\n"
              if s/-Aa\b/-Ae/g;  # allow "long long" in UUID.h
         }
-	$_;
+        $_;
     }
 };
 
 WriteMakefile(
-    'NAME'		=> 'Data::UUID',
-    'VERSION_FROM'	=> 'UUID.pm', # finds $VERSION
-    'PREREQ_PM'		=> {}, # e.g., Module::Name => 1.1
-    ($] >= 5.005 ?    ## Add these new keywords supported since 5.005
-      (ABSTRACT_FROM => 'UUID.pm', # retrieve abstract from module
-       AUTHOR     => 'A. U. Thor <a.u.thor@a.galaxy.far.far.away>') : ()),
-    'LIBS'		=> ['-lsocket'], # e.g., '-lm'
-    'DEFINE'		=> '', # e.g., '-DHAVE_SOMETHING'
-	# Insert -I. if you add *.h files later:
-    'INC'		=> '', # e.g., '-I/usr/include/other'
-	# Un-comment this if you add C files to link with later:
-    'OBJECT'		=> '$(O_FILES)', # link all the C files too
-    'CONFIGURE'         => 
-       sub {
-	  my $d = '/var/tmp';
-          $d = prompt("UUID state storage", $d);
-          
-          my $m = '0007';
-          $m = prompt("default umask", $m);
+  ($] >= 5.005 ## Add these new keywords supported since 5.005
+  ? (ABSTRACT_FROM => 'UUID.pm', # retrieve abstract from module
+     AUTHOR        => 'A. U. Thor <a.u.thor@a.galaxy.far.far.away>')
+  : ()),
 
-          chmod(0666, sprintf("%s/%s", $d, ".UUID_NODEID"));
-          chmod(0666, sprintf("%s/%s", $d, ".UUID_STATE"));
-	  return { 'DEFINE' => qq(-D_STDIR=\\"$d\\").
-		   qq( -D__$Config{osname}__).
-		   qq( -D_DEFAULT_UMASK=$m)};
-       }
+  NAME                => 'Data::UUID',
+  VERSION_FROM        => 'UUID.pm', # finds $VERSION
+  PREREQ_PM           => {}, # e.g., Module::Name => 1.1
+  LIBS                => ['-lsocket'], # e.g., '-lm'
+  DEFINE              => '', # e.g., '-DHAVE_SOMETHING'
+  # Insert -I. if you add *.h files later:
+  INC                 => '', # e.g., '-I/usr/include/other'
+  # Un-comment this if you add C files to link with later:
+  OBJECT              => '$(O_FILES)', # link all the C files too
+  CONFIGURE           => sub {
+    my $d = eval { require File::Spec; File::Spec->tmpdir; } || '/var/tmp';
+    $d = prompt("UUID state storage", $d);
+
+    my $m = '0007';
+    $m = prompt("default umask", $m);
+
+    chmod(0666, sprintf("%s/%s", $d, ".UUID_NODEID"));
+    chmod(0666, sprintf("%s/%s", $d, ".UUID_STATE"));
+    return {
+      DEFINE => qq(-D_STDIR=\\"$d\\")
+              . qq( -D__$Config{osname}__)
+              . qq( -D_DEFAULT_UMASK=$m)
+    };
+  }
 );

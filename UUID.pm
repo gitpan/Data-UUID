@@ -17,7 +17,7 @@ require AutoLoader;
    NameSpace_URL
    NameSpace_X500
 );
-$VERSION = '0.12_01';
+$VERSION = '0.13';
 
 
 # Preloaded methods go here.
@@ -33,18 +33,17 @@ sub AUTOLOAD {
     croak "& not defined" if $constname eq 'constant';
     my $val = constant($constname, @_ ? $_[0] : 0);
     if ($! != 0) {
-	if ($! =~ /Invalid/ || $!{EINVAL}) {
-	    $AutoLoader::AUTOLOAD = $AUTOLOAD;
-	    goto &AutoLoader::AUTOLOAD;
-	}
-	else {
-	    croak "Your vendor has not defined Data::UUID macro $constname";
-	}
+      if ($! =~ /Invalid/ || $!{EINVAL}) {
+        $AutoLoader::AUTOLOAD = $AUTOLOAD;
+        goto &AutoLoader::AUTOLOAD;
+      } else {
+        croak "Your vendor has not defined Data::UUID macro $constname";
+      }
     }
     {
-	no strict 'refs';
-	# Fixed between 5.005_53 and 5.005_61
-	*$AUTOLOAD = sub { $val };
+      no strict 'refs';
+      # Fixed between 5.005_53 and 5.005_61
+      *$AUTOLOAD = sub { $val };
     }
     goto &$AUTOLOAD;
 }

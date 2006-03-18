@@ -1,5 +1,7 @@
 package Data::UUID;
 
+use strict;
+
 use Carp;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK);
 
@@ -17,7 +19,7 @@ require AutoLoader;
    NameSpace_URL
    NameSpace_X500
 );
-$VERSION = '0.13';
+$VERSION = '0.14';
 
 
 # Preloaded methods go here.

@@ -11,4 +11,5 @@ UUID.xs
 md5.c
 md5.h
 typemap
+LICENSE
 META.yml                                 Module meta-data (added by MakeMaker)

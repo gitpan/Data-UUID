@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:                Data-UUID
-version:             0.147_01
+version:             0.148
 abstract:            Perl extension for generating Globally/Universally 
 license:             unknown
 generated_by:        ExtUtils::MakeMaker version 6.31

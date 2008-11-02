@@ -8,6 +8,7 @@ use vars qw($VERSION @ISA @EXPORT @EXPORT_OK);
 require Exporter;
 require DynaLoader;
 require AutoLoader;
+require Digest::MD5;
 
 @ISA = qw(Exporter DynaLoader);
 # Items to export into callers namespace by default. Note: do not export
@@ -19,7 +20,7 @@ require AutoLoader;
    NameSpace_URL
    NameSpace_X500
 );
-$VERSION = '1.149';
+$VERSION = '1.200_01';
 
 # Preloaded methods go here.
 

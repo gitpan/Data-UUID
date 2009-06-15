@@ -20,19 +20,21 @@ require Digest::MD5;
    NameSpace_URL
    NameSpace_X500
 );
-$VERSION = '1.201';
+$VERSION = '1.202';
 
 # Preloaded methods go here.
 
 sub AUTOLOAD {
+
+
     # This AUTOLOAD is used to 'autoload' constants from the constant()
     # XS function.  If a constant is not found then control is passed
     # to the AUTOLOAD in AutoLoader.
-
     my $constname;
     our $AUTOLOAD;
     ($constname = $AUTOLOAD) =~ s/.*:://;
     croak "& not defined" if $constname eq 'constant';
+    local $!;  # don't leak $! from calling code
     my $val = constant($constname, @_ ? $_[0] : 0);
     if ($! != 0) {
       if ($! =~ /Invalid/ || $!{EINVAL}) {

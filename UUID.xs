@@ -3,6 +3,27 @@
 #include "XSUB.h"
 #include "UUID.h"
 
+
+#ifdef USE_ITHREADS
+# define DU_THREADSAFE 1
+#else
+# define DU_THREADSAFE 0
+#endif
+
+#if DU_THREADSAFE
+# include "ptable.h"
+
+static ptable *instances;
+static perl_mutex instances_mutex;
+
+static void inc(pTHX_ ptable_ent *ent, void *ud) {
+    PERL_UNUSED_VAR(ud);
+    UV count = (UV)ent->val;
+    ptable_store(instances, ent->key, (void *)++count);
+}
+
+#endif
+
 static  perl_uuid_t NameSpace_DNS = { /* 6ba7b810-9dad-11d1-80b4-00c04fd430c8 */
    0x6ba7b810,
    0x9dad,
@@ -24,7 +45,7 @@ static  perl_uuid_t NameSpace_OID = { /* 6ba7b812-9dad-11d1-80b4-00c04fd430c8 */
    0x80, 0xb4, { 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8 }
 };
 
-perl_uuid_t NameSpace_X500 = { /* 6ba7b814-9dad-11d1-80b4-00c04fd430c8 */
+static  perl_uuid_t NameSpace_X500 = { /* 6ba7b814-9dad-11d1-80b4-00c04fd430c8 */
    0x6ba7b814,
    0x9dad,
    0x11d1,
@@ -303,37 +324,15 @@ MODULE = Data::UUID		PACKAGE = Data::UUID
 
 PROTOTYPES: DISABLE
 
-void
-constant(sv,arg)
-PREINIT:
-   STRLEN  len;
-   char   *pv;
-INPUT:
-   SV   *sv
-   char *s = SvPV(sv, len);
-PPCODE:
-   pv = 0; len = sizeof(perl_uuid_t);
-   if (strEQ(s,"NameSpace_DNS"))
-      pv = (char*)&NameSpace_DNS;
-   if (strEQ(s,"NameSpace_URL"))
-      pv = (char*)&NameSpace_URL;
-   if (strEQ(s,"NameSpace_X500"))
-      pv = (char*)&NameSpace_X500;
-   if (strEQ(s,"NameSpace_OID"))
-      pv = (char*)&NameSpace_OID;
-   ST(0) = sv_2mortal(newSVpv(pv, len));
-   XSRETURN(1);
-
 uuid_context_t*
 new(class)
-   char *class;
 PREINIT:
    FILE          *fd;
    unsigned char  seed[16];
    perl_uuid_time_t    timestamp;
    mode_t         mask;
 CODE:
-   Newz(0,RETVAL,1,uuid_context_t);
+   RETVAL = (uuid_context_t *)PerlMemShared_malloc(sizeof(uuid_context_t));
    if ((fd = fopen(UUID_STATE_NV_STORE, "rb"))) {
       fread(&(RETVAL->state), sizeof(uuid_state_t), 1, fd);
       fclose(fd);
@@ -357,7 +356,12 @@ CODE:
       };
       umask(mask);
    }
-   errno = 0; 
+   errno = 0;
+#if DU_THREADSAFE
+   MUTEX_LOCK(&instances_mutex);
+   ptable_store(instances, RETVAL, (void *)(UV)1);
+   MUTEX_UNLOCK(&instances_mutex);
+#endif
 OUTPUT:
    RETVAL
 
@@ -476,7 +480,8 @@ ALIAS:
 PREINIT:
    perl_uuid_t         uuid;
    char          *from, *to;
-   int            i, c;
+   int            c;
+   unsigned int   i;
    unsigned char  buf[4];
 PPCODE:
    switch(ix) {
@@ -528,16 +533,55 @@ PPCODE:
    ST(0) = make_ret(uuid, F_BIN);
    XSRETURN(1);
 
+#if DU_THREADSAFE
+
+void
+CLONE(klass)
+CODE:
+   MUTEX_LOCK(&instances_mutex);
+   ptable_walk(instances, inc, instances);
+   MUTEX_UNLOCK(&instances_mutex);
+
+#endif
+
 void
 DESTROY(self)
    uuid_context_t *self;
 PREINIT:
+#if DU_THREADSAFE
+   UV            count;
+#endif
    FILE           *fd;
 CODE:
-   if ((fd = fopen(UUID_STATE_NV_STORE, "wb"))) {
-      LOCK(fd);
-      fwrite(&(self->state), sizeof(uuid_state_t), 1, fd);
-      UNLOCK(fd);
-      fclose(fd);
-   };
-   Safefree(self);
+#if DU_THREADSAFE
+   MUTEX_LOCK(&instances_mutex);
+   count = (UV)ptable_fetch(instances, self);
+   count--;
+   ptable_store(instances, self, (void *)count);
+   MUTEX_UNLOCK(&instances_mutex);
+   if (count == 0) {
+#endif
+      if ((fd = fopen(UUID_STATE_NV_STORE, "wb"))) {
+         LOCK(fd);
+         fwrite(&(self->state), sizeof(uuid_state_t), 1, fd);
+         UNLOCK(fd);
+         fclose(fd);
+      };
+      PerlMemShared_free(self);
+#if DU_THREADSAFE
+   }
+#endif
+
+BOOT:
+{
+#if DU_THREADSAFE
+  instances = ptable_new();
+  MUTEX_INIT(&instances_mutex);
+#endif
+  HV *stash = gv_stashpvs("Data::UUID", 0);
+  STRLEN len = sizeof(perl_uuid_t);
+  newCONSTSUB(stash, "NameSpace_DNS", newSVpv((char *)&NameSpace_DNS, len));
+  newCONSTSUB(stash, "NameSpace_URL", newSVpv((char *)&NameSpace_URL, len));
+  newCONSTSUB(stash, "NameSpace_OID", newSVpv((char *)&NameSpace_OID, len));
+  newCONSTSUB(stash, "NameSpace_X500", newSVpv((char *)&NameSpace_X500, len));
+}

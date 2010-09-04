@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               Data-UUID
-version:            1.215
+version:            1.216
 abstract:           Perl extension for generating Globally/Universally 
 author:
     - Ricardo Signes <rjbs[at]cpan.org>

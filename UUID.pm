@@ -19,7 +19,7 @@ require Digest::MD5;
    NameSpace_URL
    NameSpace_X500
 );
-$VERSION = '1.216';
+$VERSION = '1.217';
 
 bootstrap Data::UUID $VERSION;
 
@@ -118,7 +118,7 @@ This modules provides several methods to create a UUID:
 
 Examples:
 
-   use Data::UUID qw(:all);
+   use Data::UUID;
 
    # this creates a new UUID in string form, based on the standard namespace
    # UUID NameSpace_URL and name "www.mycompany.com"

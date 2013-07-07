@@ -3,23 +3,19 @@ package Data::UUID;
 use strict;
 
 use Carp;
-use vars qw($VERSION @ISA @EXPORT @EXPORT_OK);
 
 require Exporter;
 require DynaLoader;
 require Digest::MD5;
 
-@ISA = qw(Exporter DynaLoader);
-# Items to export into callers namespace by default. Note: do not export
-# names by default without a very good reason. Use EXPORT_OK instead.
-# Do not simply export all your public functions/methods/constants.
-@EXPORT = qw(
+our @ISA = qw(Exporter DynaLoader);
+our @EXPORT = qw(
    NameSpace_DNS
    NameSpace_OID
    NameSpace_URL
    NameSpace_X500
 );
-$VERSION = '1.218';
+our $VERSION = '1.219';
 
 bootstrap Data::UUID $VERSION;
 
@@ -28,8 +24,14 @@ __END__
 
 =head1 NAME
 
-Data::UUID - Perl extension for generating Globally/Universally 
-Unique Identifiers (GUIDs/UUIDs).
+Data::UUID - Globally/Universally Unique Identifiers (GUIDs/UUIDs)
+
+=head1 SEE INSTEAD?
+
+The module L<Data::GUID> provides another interface for generating GUIDs.
+Right now, it relies on Data::UUID, but it may not in the future.  Its
+interface may be just a little more straightforward for the average Perl
+programer.
 
 =head1 SYNOPSIS
 
@@ -65,7 +67,8 @@ UUIDs and supports fairly high allocation rates -- 10 million per second per
 machine -- and therefore is suitable for identifying both extremely short-lived
 and very persistent objects on a given system as well as across the network.
 
-This modules provides several methods to create a UUID:
+This modules provides several methods to create a UUID.  In all methods, C<<
+<namespace> >> is a UUID and C<< <name> >> is a free form string.
  
    # creates binary (16 byte long binary value) UUID.
    $ug->create();

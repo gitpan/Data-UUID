@@ -21,6 +21,8 @@
 # define aPTBL   aTHX
 # define aPTBL_  aTHX_
 
+# define PTABLE_VAL_FREE(V) ((void) (V))
+
 # include "ptable.h"
 
 # define ptable_store(T, K, V)  ptable_store(aTHX_ (T), (K), (V))
@@ -29,7 +31,7 @@ static ptable *instances;
 static perl_mutex instances_mutex;
 
 static void inc(pTHX_ ptable_ent *ent, void *ud) {
-    UV count = (UV)ent->val;
+    UV count = PTR2UV(ent->val);
     PERL_UNUSED_VAR(ud);
     ptable_store(instances, ent->key, (void *)++count);
 }
@@ -209,16 +211,17 @@ static void get_random_info(unsigned char seed[16]) {
    MD5Final(seed, ctx);
 }
 
-SV* make_ret(const perl_uuid_t u, int type) {
-   char           buf[BUFSIZ];
-   unsigned char *from, *to;
-   STRLEN         len;
-   int            i;
+static SV* make_ret(const perl_uuid_t u, int type) {
+   char                 buf[BUFSIZ];
+   const unsigned char *from;
+   unsigned char       *to;
+   STRLEN               len;
+   int                  i;
 
    memset(buf, 0x00, BUFSIZ);
    switch(type) {
    case F_BIN:
-      memcpy(buf, (void*)&u, sizeof(perl_uuid_t));
+      memcpy(buf, &u, sizeof(perl_uuid_t));
       len = sizeof(perl_uuid_t);
       break;
    case F_STR:
@@ -236,8 +239,7 @@ SV* make_ret(const perl_uuid_t u, int type) {
       len = strlen(buf);
       break;
    case F_B64:
-      for(from = (unsigned char*)&u, to = (unsigned char*)buf, i = sizeof(u); 
-	  i > 0; i -= 3, from += 3) {
+      for(from = (const unsigned char*)&u, to = (unsigned char*)buf, i = sizeof(u); i > 0; i -= 3, from += 3) {
          *to++ = base64[from[0]>>2];
          switch(i) {
 	 case 1:
@@ -351,6 +353,7 @@ PREINIT:
    unsigned char  seed[16];
    perl_uuid_time_t    timestamp;
    mode_t         mask;
+   UV             one = 1;
 CODE:
    RETVAL = (uuid_context_t *)PerlMemShared_malloc(sizeof(uuid_context_t));
    if ((fd = fopen(UUID_STATE_NV_STORE, "rb"))) {
@@ -379,7 +382,7 @@ CODE:
    errno = 0;
 #if DU_THREADSAFE
    MUTEX_LOCK(&instances_mutex);
-   ptable_store(instances, RETVAL, (void *)(UV)1);
+   ptable_store(instances, RETVAL, INT2PTR(void *, one));
    MUTEX_UNLOCK(&instances_mutex);
 #endif
 OUTPUT:
@@ -575,7 +578,7 @@ PREINIT:
 CODE:
 #if DU_THREADSAFE
    MUTEX_LOCK(&instances_mutex);
-   count = (UV)ptable_fetch(instances, self);
+   count = PTR2UV(ptable_fetch(instances, self));
    count--;
    ptable_store(instances, self, (void *)count);
    MUTEX_UNLOCK(&instances_mutex);

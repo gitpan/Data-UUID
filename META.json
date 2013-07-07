@@ -1,10 +1,10 @@
 {
-   "abstract" : "Perl extension for generating Globally/Universally ",
+   "abstract" : "Globally/Universally Unique Identifiers (GUIDs/UUIDs)",
    "author" : [
       "Ricardo Signes <rjbs[at]cpan.org>"
    ],
    "dynamic_config" : 1,
-   "generated_by" : "ExtUtils::MakeMaker version 6.6302, CPAN::Meta::Converter version 2.120921",
+   "generated_by" : "ExtUtils::MakeMaker version 6.68, CPAN::Meta::Converter version 2.131560",
    "license" : [
       "bsd"
    ],
@@ -37,5 +37,13 @@
       }
    },
    "release_status" : "stable",
-   "version" : "1.218"
+   "resources" : {
+      "bugtracker" : {
+         "web" : "https://github.com/rjbs/Data-UUID/issues"
+      },
+      "repository" : {
+         "url" : "https://github.com/rjbs/Data-UUID"
+      }
+   },
+   "version" : "1.219"
 }

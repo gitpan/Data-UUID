@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #ifndef _MSC_VER
-// No unistd.h in MS VC
+/* No unistd.h in MS VC */
 #include <unistd.h>
 #endif
 #include <time.h>
@@ -53,7 +53,7 @@
 
 #define UUID_STATE			".UUID_STATE"
 #define UUID_NODEID			".UUID_NODEID"
-#if defined __mingw32__ || defined _WIN32 || defined _MSC_VER
+#if defined __mingw32__ || (defined _WIN32 && !defined(__cygwin__)) || defined _MSC_VER
 #define UUID_STATE_NV_STORE		_STDIR"\\"UUID_STATE
 #define UUID_NODEID_NV_STORE		_STDIR"\\"UUID_NODEID
 #else
@@ -150,11 +150,12 @@ static void       get_current_time(perl_uuid_time_t * timestamp);
 static unsigned16 true_random(void);
 static void       get_system_time(perl_uuid_time_t *perl_uuid_time);
 static void       get_random_info(unsigned char seed[16]);
-static SV*        MD5Init();
+static SV*        make_ret(const perl_uuid_t u, int type);
+static SV*        MD5Init(void);
 static void       MD5Update(SV* ctx, SV* data);
 static void       MD5Final(unsigned char hash[16], SV* ctx);
 
-static char   *base64 = 
+static const char base64[] =
    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 static unsigned char index64[256] = {

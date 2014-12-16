@@ -15,7 +15,7 @@ our @EXPORT = qw(
    NameSpace_URL
    NameSpace_X500
 );
-our $VERSION = '1.219';
+our $VERSION = '1.220';
 
 bootstrap Data::UUID $VERSION;
 
@@ -37,7 +37,7 @@ programer.
 
   use Data::UUID;
   
-  $ug    = new Data::UUID;
+  $ug    = Data::UUID->new;
   $uuid1 = $ug->create();
   $uuid2 = $ug->create_from_name(<namespace>, <name>);
 
@@ -126,7 +126,7 @@ Examples:
    # this creates a new UUID in string form, based on the standard namespace
    # UUID NameSpace_URL and name "www.mycompany.com"
 
-   $ug = new Data::UUID;
+   $ug = Data::UUID->new;
    print $ug->create_from_name_str(NameSpace_URL, "www.mycompany.com");
 
 =head2 EXPORT
